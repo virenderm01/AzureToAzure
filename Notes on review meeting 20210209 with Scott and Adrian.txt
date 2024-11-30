@@ -1,0 +1,20 @@
+Adrian - could this part of ION?
+	Scott thinks it will need to be a stand-alone service
+
+Scott 
+We will need to protect this form (e.g., CAPTCHA)
+We will want to add Tech Data account # to authenticate
+
+
+DNS is easy - just get a static IP address for the site and modify our GoDaddy account to point to the public IP
+
+Could we do a dropdown to add sales reps?
+
+Put this into the C&A subscription
+	Build a new instance once we a name from Marketing
+
+Kyle to get name from Marketing folks and guidelines for colors, images, etc. 
+	Start Raquel Acuna
+
+Script version
+	need to update to 3.5
