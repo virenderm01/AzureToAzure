@@ -47,12 +47,12 @@ public class FileUploadServlet extends HttpServlet {
         String contactFullName = request.getParameter("contactFullName").trim();
         String emailAddress = request.getParameter("emailAddress").trim();
         String phoneNumber = request.getParameter("phoneNumber").trim();
-        String billStreet = request.getParameter("billStreet").trim();
-        String billStreet1 = request.getParameter("billStreet").trim();
-        String billCity = request.getParameter("billStreet").trim();
+        String billStreet = request.getParameter("addrLine1").trim();
+        String billStreet1 = request.getParameter("addrLine2").trim();
+        String billCity = request.getParameter("billCity").trim();
         String billState = request.getParameter("billState").trim();
         String billCountry = request.getParameter("billCountry").trim();
-        String zipCode = "test";//request.getParameter("zipCode").trim();
+        String zipCode = request.getParameter("zipCode").trim();
         String tdSalesRepName = request.getParameter("tdSalesRepName").trim();
         String endCustomer = request.getParameter("endCustomer").trim();
         String mrr = request.getParameter("mrr").trim();
