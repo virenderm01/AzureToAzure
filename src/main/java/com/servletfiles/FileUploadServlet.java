@@ -1,7 +1,10 @@
 package com.servletfiles;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,8 +110,11 @@ public class FileUploadServlet extends HttpServlet {
 		}
 	//	int total = UploadedFilesServlet.allFiles.length;
 		UploadDetail details = null;
+
+
 		List<UploadDetail> fileList = new ArrayList<UploadDetail>();
 		AzuretoAzure azuretoAzure = new AzuretoAzure();
+		ByteArrayOutputStream bos = null;
 		for (Part part : request.getParts()) {
 			System.out.println("name1:"  + part.getName() );
 			if(part.getName().equalsIgnoreCase("fileUpload")) {
@@ -118,16 +124,18 @@ public class FileUploadServlet extends HttpServlet {
 			details.setFileName(fileName);
 			if(fileName.endsWith("json"))
 			{
-				details.setFiletype("Either Json is not valid or file type is not correct");
+				details.setFiletype("Json File.");
 			}
 			details.setFileSize(part.getSize() / 1024);
 			try {
-				part.write(fileuploadcompanydirectory + File.separator + fileName);
+				Path tempFile = Files.createTempFile("uploaded_", "_" + fileName);
+				part.write(tempFile.toString());
+//				part.write(fileuploadcompanydirectory + File.separator + fileName);
 				details.setUploadStatus("Success");
 				
 					if(fileName.endsWith("json")) {
 					fileList.add(details);
-					azuretoAzure.createsow(fileuploadcompanydirectory, fileName,emailAddress,recipient,customerName,message,downloadPath,endCustomer);
+					bos = azuretoAzure.createsow(tempFile, tempFile.getFileName().toString(),emailAddress,recipient,customerName,message,downloadPath,endCustomer);
 					
 					}
 					else
@@ -142,7 +150,7 @@ public class FileUploadServlet extends HttpServlet {
 			
 			
 		}
-		azuretoAzure.sendzip(fileuploadcompanydirectory,endCustomer,emailAddress,customerName,message);
+		azuretoAzure.sendzip(bos,endCustomer,emailAddress,customerName,message);
 		request.setAttribute("uploadedFiles", fileList);
 		RequestDispatcher dispatcher = request.getRequestDispatcher("/fileuploadResponse.jsp");
 		dispatcher.forward(request, response);

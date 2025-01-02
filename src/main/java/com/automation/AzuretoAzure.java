@@ -5,13 +5,7 @@ package com.automation;
  * parse the file using JSON method and generate analysis files
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,10 +43,10 @@ public class AzuretoAzure {
 	/*
 	 * Create Analysis files and SOW
 	 */
-	public void createsow(String uploadpath, String filename, String from, String recipient, String companyname,
+	public ByteArrayOutputStream  createsow(Path uploadpath, String filename, String from, String recipient, String companyname,
 						  String message, String sowpath, String endcustomer) throws IOException {
-		String folder = uploadpath;
-
+		Path folder = uploadpath;
+		List<Path> tempFiles = new ArrayList<>();
 		List<String> mstype1 = new ArrayList<String>();
 
 		int nonpassflag = 0;
@@ -286,7 +280,7 @@ public class AzuretoAzure {
 		try {
 			// creates uploaded file
 			// System.out.println("File Created:" + folder + filename);
-			File file = new File(folder + "\\"+filename);
+			File file = uploadpath.toFile();
 
 			// System.out.println("*****");
 			// BufferedReader br = new BufferedReader(new
@@ -314,16 +308,17 @@ public class AzuretoAzure {
 			t = (JSONArray) employeeList.get(0);
 			// System.out.println(t);
 
-			checkPathAndFolder(folder);
-			String textFileName = filename.split("\\.")[0] + ".txt";
+//			checkPathAndFolder(folder);
+			String textFileName = filename.split("\\.")[0];
 
-			String analysisfilePath = folder + "\\subAnalysis_Main\\"  ;
-			checkPathAndFolder(analysisfilePath);
+//			String analysisfilePath = folder + "\\subAnalysis_Main\\"  ;
+//			checkPathAndFolder(analysisfilePath);
 
-            File textFile = new File(analysisfilePath + textFileName);
+            Path textFile = Files.createTempFile(textFileName, ".txt");
+			tempFiles.add(textFile);
 			FileWriter fw;
 
-			fw = new FileWriter(textFile);
+			fw = new FileWriter(textFile.toFile());
 
 			for (Object ost1 : t) {
 
@@ -1089,6 +1084,7 @@ public class AzuretoAzure {
 						fw.write("-> " + time / 60 + "hours" + " and " + res + "minutes" + "\r\n");
 						totalhoursforsub = totalhoursforsub + (time / 60);
 						totalminutesforsub = totalminutesforsub + res;
+
 					} catch (Exception e) {
 						System.out.println(e);
 					}
@@ -1147,26 +1143,28 @@ public class AzuretoAzure {
 			fw.close();
 			// SOW write
 			try {
-				checkPathAndFolder(sowpath);
-				String filePath = sowpath + File.separator + "SOW.docx";
+//				checkPathAndFolder(sowpath);
+//				String filePath = sowpath + File.separator + "SOW.docx";
 
-				File sowFile = new File(filePath);
-				createFileIfDoesntExist(sowFile);
-				InputStream is = new FileInputStream(sowpath + "\\"+ "SOW.docx");
-				XWPFDocument doc = new XWPFDocument(is);
-
-				List<XWPFParagraph> paras = doc.getParagraphs();
+//				File sowFile = new File(filePath);
+//				createFileIfDoesntExist(sowFile);
+//				Path tempSowFile = Files.createTempFile("SOW", ".docx");
+//				tempFiles.add(tempSowFile);
+//				FileOutputStream  is = new FileOutputStream(tempSowFile.toFile());
+//				XWPFDocument doc = new XWPFDocument(is);
+//
+//				List<XWPFParagraph> paras = doc.getParagraphs();
 				XWPFDocument newdoc = new XWPFDocument();
 
-				for (XWPFParagraph para : paras) {
-
-					if (!para.getParagraphText().isEmpty()) {
-						XWPFParagraph newpara = newdoc.createParagraph();
-						newpara.setNumID(para.getNumID());
-						copyAllRunsToAnotherParagraph(para, newpara);
-					}
-
-				}
+//				for (XWPFParagraph para : paras) {
+//
+//					if (!para.getParagraphText().isEmpty()) {
+//						XWPFParagraph newpara = newdoc.createParagraph();
+//						newpara.setNumID(para.getNumID());
+//						copyAllRunsToAnotherParagraph(para, newpara);
+//					}
+//
+//				}
 				XWPFParagraph thingstonote = newdoc.createParagraph();
 				XWPFRun run = thingstonote.createRun();
 
@@ -1420,20 +1418,33 @@ public class AzuretoAzure {
 				}
 
 				String filenameforsow = "";
-				checkPathAndFolder(folder +"\\" +endcustomer );
+//				checkPathAndFolder(folder +"\\" +endcustomer );
 
 
-				filenameforsow = folder +"\\" +endcustomer +"\\"+ filename + ".docx";
-				File fileSowFile = new File(filenameforsow);
-				createFileIfDoesntExist(fileSowFile);
-				FileOutputStream fos = new FileOutputStream(filenameforsow);
+//				filenameforsow = folder +"\\" +endcustomer +"\\"+ filename + ".docx";
+				Path tempFilenameforsow = Files.createTempFile(filename.split("\\.")[0], ".docx");
+				tempFiles.add(tempFilenameforsow);
+//				File fileSowFile = new File(tempFilenameforsow.toFile());
+//				createFileIfDoesntExist(fileSowFile);
+				FileOutputStream fos = new FileOutputStream(tempFilenameforsow.toFile());
 				newdoc.write(fos);
 				fos.flush();
 				fos.close();
-				doc.close();
 				newdoc.close();
 
 				flags.clear();
+
+				// Create ZIP stream for all temp files
+				ByteArrayOutputStream zipStream = new ByteArrayOutputStream();
+				try (ZipOutputStream zos = new ZipOutputStream(zipStream)) {
+					for (Path tempFile : tempFiles) {
+						zos.putNextEntry(new ZipEntry(tempFile.getFileName().toString()));
+						Files.copy(tempFile, zos);
+						zos.closeEntry();
+					}
+				}
+
+				return zipStream;
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println(e);
@@ -1442,6 +1453,7 @@ public class AzuretoAzure {
 			e.printStackTrace();
 			System.out.println(e);
 		}
+		return null;
 	}
 
 	private void checkPathAndFolder(String folder) throws IOException {
@@ -1456,6 +1468,22 @@ public class AzuretoAzure {
 			// System.out.println("Directory already exists");
 		}
 	}
+
+	public void sendzip(ByteArrayOutputStream zipped, String endcustomer, String from, String companyname, String message) throws IOException {
+
+
+		MyEmailer test = new MyEmailer();
+		try {
+			test.SendMail(zipped, from, companyname, message);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Success...");
+
+		// resources.clear();
+	}
+
 	public void sendzip(String uploadpath, String endcustomer, String from, String companyname, String message) throws IOException {
 		checkPathAndFolder(uploadpath);
 		String zipfile = uploadpath.substring(0, uploadpath.length() - endcustomer.length()) + endcustomer + ".zip";
