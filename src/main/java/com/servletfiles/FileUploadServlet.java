@@ -61,6 +61,7 @@ public class FileUploadServlet extends HttpServlet {
         String mrr = request.getParameter("mrr").trim();
   
        String recipient ="kyle.rhynerson@techdata.com";
+	   recipient = emailAddress;
        String message = "CustomerName:	"+ customerName +"<br/>"+ "ContactFullName:	"+contactFullName+"<br/>"+ "EmailAddress:	"+ emailAddress +"<br/>"+ "PhoneNumber:	"+ phoneNumber +"<br/>"+ "addrLine1:	"+ billStreet +"<br/>"+
     		  "addrLine2:	"+ billStreet1 +"<br/>"+
     		  "billCity:	"+ billCity +"<br/>"+
